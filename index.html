@@ -1014,7 +1014,9 @@ const RELAY = "https://script.google.com/macros/s/AKfycbwR30rF4ZflO4JmYhMIuD3ja7
 let lastNotify = 0;
 function notify(text){
   if (!RELAY || Date.now() - lastNotify < 10000) return; lastNotify = Date.now();
-  try { fetch(RELAY, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain"}, body: JSON.stringify({text: text + "\nСтраница: " + location.href})}).catch(()=>{}); } catch {}
+  // все не-латинские буквы кодируем как \uXXXX, чтобы русский текст никогда не превращался в «????»
+  const body = JSON.stringify({text: text + "\nСтраница: " + location.href}).replace(/[\u007f-￿]/g, c => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+  try { fetch(RELAY, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body}).catch(()=>{}); } catch {}
 }
 const $ = id => document.getElementById(id);
 
