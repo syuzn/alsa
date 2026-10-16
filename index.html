@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>ALSA Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Manrope:wght@500;700;800&family=Noto+Sans+Armenian:wght@500;700;900&family=Noto+Sans+SC:wght@500;700;900&display=swap">
+<style>
+/* Layout: яркая витрина. Тёмный неоновый первый экран, светлые блоки с цветными карточками товаров, крупный шрифт, одна мысль на блок */
+:root{
+  --night:#120B1A; --night2:#24123A; --paper:#FBF7F0; --card:#FFFFFF; --ink:#140C1C; --muted:#5F5468;
+  --pink:#C2185B; --violet:#5B1A8E; --yellow:#E2B54A; --mint:#1FA97A; --line:#EDE4D8;
+  --gold:linear-gradient(135deg,#FBE9A0 0%,#E2B54A 40%,#B8862B 70%,#F3D27A 100%);
+  --display:"Unbounded","Noto Sans Armenian","Noto Sans SC","Arial Black",system-ui,sans-serif; --body:"Manrope","Noto Sans Armenian","Noto Sans SC",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;overflow-x:hidden}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.7rem,4.4vw,2.8rem);font-weight:900}
+h2 em,h1 em{font-style:normal;color:var(--pink)}
+.tag{display:inline-block;font:800 .78rem var(--body);letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:var(--night);padding:6px 12px;border-radius:8px;transform:rotate(-2deg)}
+.sub{color:var(--muted);font-size:1.1rem;max-width:58ch;margin:12px 0 0}
+section{padding-block:72px}
+.head{margin-bottom:36px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+a{color:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border:0;cursor:pointer;font:800 1.05rem var(--body);padding:18px 28px;border-radius:16px;text-decoration:none;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-3px)}
+.btn:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+.btn-y{background:var(--gold);color:var(--night);box-shadow:0 8px 0 #8C6A1F,0 14px 40px -10px rgba(226,181,74,.7);position:relative;overflow:hidden}
+.btn-y::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-20deg);animation:shine 3.2s ease-in-out infinite}
+@keyframes shine{0%,60%{left:-60%}100%{left:130%}}
+.btn-y:hover{box-shadow:0 11px 0 #8C6A1F,0 18px 50px -10px rgba(226,181,74,.85)}
+.btn-p{background:linear-gradient(135deg,#E0306F,var(--pink));color:#fff;box-shadow:0 8px 0 #7A0D36}
+.btn-o{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.35)}
+
+/* ───── HERO ───── */
+.hero{background:radial-gradient(60% 70% at 85% 30%,rgba(194,24,91,.6),transparent 70%),radial-gradient(55% 65% at 5% 95%,rgba(91,26,142,.85),transparent 70%),radial-gradient(30% 30% at 55% 0%,rgba(226,181,74,.25),transparent 70%),var(--night);color:#fff;padding-block:0 80px;position:relative;overflow:hidden}
+nav{display:flex;justify-content:space-between;align-items:center;padding-block:20px}
+.logo{display:block;width:120px;line-height:0}
+.logo svg{width:100%;height:auto;display:block}
+
+.nav-cta{font-weight:800;text-decoration:none;background:rgba(255,255,255,.12);padding:10px 18px;border-radius:12px}
+.nav-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.lang{display:flex;gap:2px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:3px}
+.lang button{border:0;background:transparent;color:rgba(255,255,255,.8);font:800 .8rem var(--body);padding:7px 9px;border-radius:9px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--gold);color:var(--night)}
+@media (max-width:620px){.nav-cta{display:none}.lang button{padding:7px 7px;font-size:.75rem}}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding-top:30px}
+.hero-grid>*{min-width:0}
+.hero h1{font-size:clamp(2.2rem,6vw,4.2rem);font-weight:900;margin:18px 0 20px}
+.hero h1 em{background:var(--gold);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:1.2rem;color:rgba(255,255,255,.85);max-width:46ch;margin:0 0 30px}
+.cta{display:flex;flex-wrap:wrap;gap:14px}
+.proof{display:flex;flex-wrap:wrap;gap:14px;margin-top:36px}
+.proof div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px 16px;font-size:.92rem;color:rgba(255,255,255,.8)}
+.proof b{display:block;font-family:var(--display);font-size:1.3rem;color:#fff}
+.stack{position:relative;height:460px}
+.stack .pc{position:absolute;width:250px;max-width:70%;top:50%;left:50%;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
+.stack .pc:nth-child(1){transform:translate(-95%,-50%) rotate(-10deg)}
+.stack .pc:nth-child(2){transform:translate(-5%,-54%) rotate(9deg)}
+.stack .pc:nth-child(3){transform:translate(-50%,-46%) rotate(-1deg);z-index:2;animation:bob 4s ease-in-out infinite}
+@keyframes bob{50%{transform:translate(-50%,-50%) rotate(1deg)}}
+.sticker{position:absolute;right:4%;top:6%;z-index:3;background:var(--gold);color:var(--night);font:900 1rem var(--display);width:110px;height:110px;border-radius:50%;display:grid;place-items:center;text-align:center;line-height:1.1;transform:rotate(12deg);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.sticker small{display:block;font:800 .7rem var(--body)}
+
+.marquee{background:var(--gold);color:var(--night);overflow:hidden;white-space:nowrap;padding-block:14px;font:800 1.05rem var(--display)}
+.marquee div{display:inline-block;animation:run 22s linear infinite}
+.marquee span{margin-right:42px}
+@keyframes run{to{transform:translateX(-50%)}}
+
+/* ───── карточка товара (как в WB) ───── */
+.pc{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:18px;overflow:hidden;background:var(--img) center/cover,var(--g);color:#fff;font-family:var(--body)}
+.pc::before{content:"";position:absolute;inset:0;background:linear-gradient(165deg,rgba(15,5,35,.55),rgba(15,5,35,0) 50%)}
+.pc .t{position:absolute;left:7%;top:6%;right:7%;font:900 1.15em/1.1 var(--display);text-shadow:0 2px 12px rgba(0,0,0,.2)}
+.pc .badge{position:absolute;right:6%;top:22%;background:var(--gold);color:var(--night);font:900 .8em var(--display);padding:6px 10px;border-radius:10px;transform:rotate(6deg)}
+.pc .emo{position:absolute;right:-4%;bottom:10%;font-size:7.5em;line-height:1;filter:drop-shadow(0 18px 18px rgba(0,0,0,.35));transform:rotate(-8deg)}
+.pc ul{position:absolute;left:6%;top:30%;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.5em;max-width:62%}
+.pc li{background:rgba(255,255,255,.95);color:var(--night);font-weight:800;font-size:.72em;padding:.45em .7em;border-radius:.6em;display:flex;gap:.4em;align-items:center;box-shadow:0 4px 10px rgba(0,0,0,.15)}
+.pc .rate{position:absolute;left:6%;bottom:5%;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);padding:.35em .7em;border-radius:99px;font-weight:800;font-size:.75em}
+.stack .pc{font-size:15px}
+
+/* ───── до/после ───── */
+.ba-grid{display:grid;grid-template-columns:minmax(0,380px) 1fr;gap:48px;align-items:center}
+.ba-grid>*{min-width:0}
+.stage{position:relative;aspect-ratio:3/4;width:100%;max-width:380px;border-radius:22px;overflow:hidden;box-shadow:0 30px 60px -25px rgba(23,11,51,.5);touch-action:pan-y;font-size:17px}
+.stage .before,.stage .after{position:absolute;inset:0}
+.before{background:url(img/vitrina-before.jpg) center/cover,#6B5A44}
+.before .note{position:absolute;left:5%;top:5%;font:700 .75em var(--body);color:#fff;background:rgba(0,0,0,.45);padding:4px 8px;border-radius:6px}
+.after{clip-path:inset(0 0 0 var(--cut,50%))}
+.after .pc{position:absolute;inset:0;border-radius:0;aspect-ratio:auto}
+.lbl{position:absolute;bottom:14px;z-index:3;font:900 .85rem var(--display);padding:7px 14px;border-radius:10px}
+.l-b{left:14px;background:#3A3326;color:#fff}.l-a{right:14px;background:var(--yellow);color:var(--night)}
+.handle{position:absolute;top:0;bottom:0;left:var(--cut,50%);width:4px;margin-left:-2px;background:#fff;z-index:3;pointer-events:none}
+.handle span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:var(--pink);color:#fff;display:grid;place-items:center;font-size:1.3rem;font-weight:900;box-shadow:0 6px 20px rgba(194,24,91,.6)}
+#cut{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize;z-index:4}
+.stage:focus-within{outline:3px solid var(--pink);outline-offset:4px}
+.diff{display:grid;gap:14px}
+.diff div{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px}
+.diff .no{color:#9A8FA8;text-decoration:line-through;font-weight:700;font-size:.95rem}
+.diff .yes{color:var(--ink);font-weight:800;font-size:.95rem}
+.diff i{font-style:normal;color:var(--pink);font-weight:900;font-size:1.3rem}
+.hint{display:inline-flex;gap:8px;align-items:center;margin-top:18px;font-weight:800;color:var(--pink)}
+
+.feed{margin-top:56px;background:var(--night);border-radius:26px;padding:28px;color:#fff}
+.feed h3{font-size:1.3rem;margin-bottom:6px}
+.feed p{margin:0 0 20px;color:rgba(255,255,255,.75)}
+.feed-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.ft{position:relative;min-width:0}
+.ft .img{aspect-ratio:3/4;border-radius:12px;overflow:hidden;position:relative;background:url(img/vitrina-before.jpg) center/cover,#6B5A44}
+.ft:nth-child(2) .img{background-size:160%;background-position:30% 70%;filter:saturate(.5) brightness(1.1)}
+.ft:nth-child(4) .img{background-size:130%;background-position:70% 40%;filter:hue-rotate(-15deg) brightness(.9)}
+.ft .pc{font-size:8.5px;border-radius:12px}
+.ft .fprice{margin-top:8px;font-weight:800;font-variant-numeric:tabular-nums}
+.ft .name{font-size:.8rem;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ft.win .img,.ft.win .pc{outline:4px solid var(--yellow);outline-offset:3px}
+.ft.win::after{content:"👆 Кликнут сюда";position:absolute;left:50%;top:-14px;transform:translateX(-50%);background:var(--yellow);color:var(--night);font:900 .72rem var(--body);padding:5px 10px;border-radius:99px;white-space:nowrap;z-index:2}
+
+/* ───── работы ───── */
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.filters button{border:2px solid var(--line);background:var(--card);color:var(--ink);font:800 .95rem var(--body);padding:10px 18px;border-radius:12px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--night);color:#fff;border-color:var(--night)}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.work{min-width:0;font-size:16px;transition:transform .2s}
+.work:hover{transform:translateY(-6px) rotate(-1deg)}
+.work .cap{display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-size:.9rem}
+.work .cap b{font-weight:800}
+.work .cap span{color:var(--muted)}
+.ex{margin-top:18px;color:var(--muted);font-size:.9rem}
+
+/* ───── цены ───── */
+.prices{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.price{min-width:0;background:var(--card);border:2px solid var(--line);border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:12px}
+.price .ico{font-size:2.2rem}
+.price h3{font-size:1.25rem}
+.price .sum{font:900 2.3rem var(--display);font-variant-numeric:tabular-nums}
+.price .sum s{font:700 1.1rem var(--body);color:var(--muted);margin-left:8px}
+.price ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;flex:1}
+.price li::before{content:"✓ ";color:var(--mint);font-weight:900}
+.price .btn{width:100%}
+.price.hot{background:linear-gradient(160deg,var(--pink),var(--violet));color:#fff;border:0;transform:scale(1.04);box-shadow:0 30px 60px -25px rgba(91,26,142,.6),0 0 0 3px #E2B54A}
+.price.hot .sum s{color:rgba(255,255,255,.7)}
+.price.hot li::before{color:var(--yellow)}
+.flag{align-self:flex-start;background:var(--gold);color:var(--night);font:900 .75rem var(--body);padding:6px 12px;border-radius:8px}
+.extra{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px}
+.extra span{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:700;font-size:.95rem}
+
+/* ───── брендинг ───── */
+.brand{margin-top:56px;background:radial-gradient(40% 50% at 0% 100%,rgba(226,181,74,.22),transparent 70%),radial-gradient(60% 80% at 100% 0%,rgba(194,24,91,.5),transparent 70%),var(--night);color:#fff;border-radius:30px;padding:40px;display:grid;grid-template-columns:.9fr 1.1fr;gap:32px;align-items:center}
+.brand>*{min-width:0}
+.brand p{color:rgba(255,255,255,.8);margin:14px 0 0;font-size:1.05rem}
+.brand h2{margin-top:14px}
+.brand-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.bc{min-width:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.bc .ico{font-size:2rem}
+.bc h3{font-size:1.15rem}
+.bc .sum{font:900 2rem var(--display);font-variant-numeric:tabular-nums}
+.bc .sum s{font:700 1rem var(--body);color:rgba(255,255,255,.6);margin-left:6px}
+.bc ul{margin:0;padding:0;list-style:none;display:grid;gap:6px;flex:1;color:rgba(255,255,255,.85);font-size:.95rem}
+.bc li::before{content:"✓ ";color:var(--yellow);font-weight:900}
+.bc .btn{width:100%;padding:14px 16px;font-size:.95rem}
+.bc .btn-line{color:#fff;border-color:rgba(255,255,255,.35)}
+.bc.hot2{background:linear-gradient(160deg,var(--pink),var(--violet));border:0}
+.brand-note{grid-column:1/-1;font-size:.95rem!important;margin:0!important}
+.brand-note b{color:var(--yellow)}
+@media (max-width:900px){.brand{grid-template-columns:1fr;padding:28px}}
+@media (max-width:520px){.brand{padding:22px}.brand-cards{grid-template-columns:1fr}}
+
+/* ───── отправьте товар ───── */
+.send{background:linear-gradient(180deg,#FBF1E1,#F7E6EC)}
+.send-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.send-steps div{min-width:0;background:var(--card);border-radius:20px;padding:22px;border:2px solid var(--line)}
+.send-steps .ico{font-size:2.2rem;display:block;margin-bottom:10px}
+.send-steps b{font-size:1.02rem}
+.send-steps p{margin:6px 0 0;color:var(--muted);font-size:.94rem}
+.carriers{margin-top:24px;background:var(--card);border-radius:22px;padding:24px;border:2px solid var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.chips span{background:#F6EFE6;border-radius:12px;padding:9px 14px;font-weight:800;font-size:.95rem}
+.chips .wb{background:linear-gradient(135deg,#CB11AB,#7B2FFF);color:#fff}
+.tip{margin:16px 0 0;color:var(--muted);font-size:.95rem;max-width:80ch}
+.tip b{color:var(--ink)}
+.send-price{margin-top:20px;display:flex;flex-wrap:wrap;gap:14px;align-items:stretch}
+.send-price div{background:var(--night);color:#fff;border-radius:16px;padding:14px 20px;display:flex;flex-direction:column}
+.send-price div span{color:rgba(255,255,255,.75);font-size:.92rem}
+.send-price .free{background:var(--mint);color:var(--night)}
+.send-price .free span{color:var(--night)}
+@media (max-width:900px){.send-steps{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.send-steps{grid-template-columns:1fr}.send-price .btn{width:100%}}
+
+/* ───── 3 услуги в шапке ───── */
+.services{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
+.svc{position:relative;min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:12px;backdrop-filter:blur(6px)}
+.svc.best{background:linear-gradient(160deg,rgba(194,24,91,.55),rgba(91,26,142,.55));border:2px solid #E2B54A}
+.svc-flag{position:absolute;top:-13px;left:22px;background:var(--gold);color:var(--night);font:900 .75rem var(--body);padding:5px 12px;border-radius:99px}
+.svc-ico{font-size:2.2rem}
+.svc-n{font:800 .72rem var(--body);letter-spacing:.1em;text-transform:uppercase;color:#E2B54A}
+.svc h3{font-size:1.25rem;margin:4px 0 6px;color:#fff}
+.svc p{margin:0;font-size:.95rem;color:rgba(255,255,255,.8);max-width:none}
+.svc-body{flex:1}
+.svc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.svc-foot b{font:900 1.35rem var(--display);color:#fff}
+.svc-foot .btn{padding:12px 18px;font-size:.92rem}
+.hero .proof{margin-top:22px}
+
+/* ───── разбор ───── */
+.audit{background:var(--card)}
+.audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.audit-grid>*{min-width:0}
+.checklist{background:var(--paper);border:2px solid var(--line);border-radius:24px;padding:26px}
+.checklist h3{font-size:1.15rem;margin-bottom:14px}
+.checklist ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.checklist li{background:var(--card);border-radius:12px;padding:11px 14px;font-weight:700;font-size:.97rem;border:1px solid var(--line)}
+.report{background:var(--night);color:#fff;border-radius:24px;padding:24px;box-shadow:0 30px 60px -25px rgba(18,11,26,.6);border:2px solid #E2B54A}
+.rep-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.rep-head small{display:block;color:#E2B54A;font-weight:800;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em}
+.rep-head b{font:900 1.15rem var(--display)}
+.score{width:74px;height:74px;border-radius:50%;background:conic-gradient(#E2B54A 54%,rgba(255,255,255,.12) 0);display:grid;place-items:center;text-align:center;position:relative;flex:none}
+.score::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--night)}
+.score b,.score small{position:relative;line-height:1}
+.score b{font:900 1.4rem var(--display);font-variant-numeric:tabular-nums}
+.score small{font-size:.6rem;color:rgba(255,255,255,.6);display:block}
+.rep{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rep li{display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.06);border-radius:14px;padding:12px}
+.rep li>span{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:900}
+.rep .bad>span{background:#E5484D}.rep .warn>span{background:#F5A623;color:var(--night)}.rep .ok>span{background:var(--mint)}
+.rep b{display:block;font-size:.97rem}
+.rep small{color:rgba(255,255,255,.7);font-size:.87rem}
+.rep-foot{margin-top:14px;font-weight:800;color:#E2B54A}
+.audit-cta{margin-top:24px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;background:var(--paper);border:2px solid var(--line);border-radius:22px;padding:20px 24px}
+.audit-cta>div:not(.or){display:flex;flex-direction:column;min-width:0;flex:1 1 200px}
+.audit-cta span{color:var(--muted);font-size:.95rem}
+.audit-cta .or{font:900 .9rem var(--display);color:var(--pink)}
+@media (max-width:900px){.services,.audit-grid{grid-template-columns:1fr}}
+
+/* ───── оплата ───── */
+.pay{background:var(--paper)}
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pm{min-width:0;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px 20px;display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center}
+.pm span{grid-row:span 2;font-size:1.8rem;width:52px;height:52px;border-radius:14px;background:#F6EFE6;display:grid;place-items:center}
+.pm b{font-size:1.02rem}
+.pm small{color:var(--muted);font-size:.88rem}
+.pay-steps{margin-top:18px;background:var(--card);border:2px solid var(--line);border-radius:22px;padding:24px}
+.pay-steps h3{font-size:1.15rem;margin-bottom:14px}
+.pay-steps ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;counter-reset:p}
+.pay-steps li{min-width:0;position:relative;padding-top:44px;display:flex;flex-direction:column;gap:4px}
+.pay-steps li::before{counter-increment:p;content:counter(p);position:absolute;top:0;left:0;width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--night);display:grid;place-items:center;font:900 1rem var(--display)}
+.pay-steps li b{font-size:.98rem}
+.pay-steps li span{color:var(--muted);font-size:.88rem}
+@media (max-width:900px){.pay-steps ol{grid-template-columns:1fr}.pay-steps li{padding:0 0 0 48px}}
+.pay-terms{margin-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pay-terms div{min-width:0;background:var(--night);color:#fff;border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:4px}
+.pay-terms b{font:900 1.05rem var(--display);color:#E2B54A}
+.pay-terms span{color:rgba(255,255,255,.8);font-size:.92rem}
+@media (max-width:900px){.pay-grid{grid-template-columns:repeat(2,1fr)}.pay-terms{grid-template-columns:1fr}}
+@media (max-width:520px){.pay-grid{grid-template-columns:1fr}}
+
+/* ───── пакеты разбора ───── */
+.tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:stretch}
+.tier{position:relative;min-width:0;background:var(--paper);border:2px solid var(--line);border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:8px}
+.tier.best{background:var(--night);color:#fff;border:2px solid #E2B54A;box-shadow:0 30px 60px -25px rgba(18,11,26,.55)}
+.t-ico{font-size:2rem}
+.tier h3{font-size:1.2rem}
+.t-sum{font:900 1.8rem var(--display);font-variant-numeric:tabular-nums}
+.t-time{font-weight:800;font-size:.88rem;color:var(--pink)}
+.tier.best .t-time{color:#E2B54A}
+.t-for{margin:0;color:var(--muted);font-size:.93rem;font-weight:700}
+.tier.best .t-for{color:rgba(255,255,255,.75)}
+.tier ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:7px;flex:1;font-size:.93rem}
+.tier li{padding-left:22px;position:relative}
+.tier li::before{content:"✓";position:absolute;left:0;color:var(--mint);font-weight:900}
+.tier.best li::before{color:#E2B54A}
+.t-rep{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-weight:800;font-size:.86rem}
+.tier.best .t-rep{background:rgba(255,255,255,.08);border-color:rgba(226,181,74,.5)}
+.tier .btn{width:100%;padding:13px 16px;font-size:.95rem}
+.tier.best .btn-line{color:#fff}
+.t-note{margin:14px 0 0;color:var(--muted);font-size:.9rem}
+@media (max-width:1000px){.tiers{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.tiers{grid-template-columns:1fr}}
+
+/* ───── калькулятор ───── */
+.calc{background:var(--card)}
+.calc-box{display:grid;grid-template-columns:1.3fr .9fr;gap:24px;align-items:start}
+.calc-box>*{min-width:0}
+.calc-in{display:grid;gap:18px}
+.calc fieldset{border:2px solid var(--line);border-radius:20px;padding:18px 20px;margin:0;background:var(--paper);min-width:0}
+.calc legend{font:900 1rem var(--display);padding:0 6px}
+.calc legend b{color:var(--pink);font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.seg input,.chk input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:flex;flex-direction:column;gap:2px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px;font-weight:800;cursor:pointer;height:100%}
+.seg small{color:var(--muted);font-weight:700}
+.seg input:checked+span{border-color:var(--pink);background:#FBE7EF;box-shadow:0 0 0 3px rgba(194,24,91,.15)}
+.seg input:focus-visible+span,.chk input:focus-visible+span{outline:3px solid var(--yellow);outline-offset:2px}
+#cQty{width:100%;accent-color:var(--pink)}
+.hint-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);font-weight:700}
+.chk{display:block;margin-top:8px}
+.chk span{display:block;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:11px 14px 11px 44px;font-weight:700;cursor:pointer;position:relative}
+.chk span::before{content:"";position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:6px;border:2px solid var(--muted)}
+.chk input:checked+span{border-color:var(--pink)}
+.chk input:checked+span::before{background:var(--pink);border-color:var(--pink);box-shadow:inset 0 0 0 3px #fff}
+.chk em{font-style:normal;color:var(--pink)}
+.calc-out{position:sticky;top:20px;background:var(--night);color:#fff;border-radius:24px;padding:26px;border:2px solid #E2B54A;display:flex;flex-direction:column;gap:12px}
+.calc-out small{color:#E2B54A;font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:.78rem}
+.total{font:900 2.8rem var(--display);font-variant-numeric:tabular-nums;line-height:1}
+.save{background:var(--mint);color:var(--night);font-weight:800;border-radius:10px;padding:6px 10px;align-self:flex-start}
+#cLines{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:.92rem;color:rgba(255,255,255,.8)}
+#cLines li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed rgba(255,255,255,.15);padding-bottom:6px}
+#cLines li b{font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
+.calc-out .note{margin:0;color:rgba(255,255,255,.6);font-size:.85rem}
+/* ───── сравнение ───── */
+.cmp-wrap{overflow-x:auto;border-radius:22px;border:2px solid var(--line);background:var(--card)}
+.cmp{width:100%;min-width:640px;border-collapse:collapse;font-size:.97rem}
+.cmp th,.cmp td{padding:14px 16px;text-align:center;border-bottom:1px solid var(--line)}
+.cmp tbody th{text-align:left;font-weight:800}
+.cmp thead th{font:900 .95rem var(--display);background:var(--paper)}
+.cmp .me{background:#FBF1DA;font-weight:800}
+.cmp thead .me{background:var(--gold);color:var(--night)}
+.cmp .no{color:#C4384A;font-weight:900}.cmp .mid{color:var(--muted)}.cmp .yes{color:var(--mint);font-weight:900}
+.cmp .me.yes{color:#0F7A57}
+/* ───── кто я ───── */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center}
+.about-grid>*{min-width:0}
+.about-facts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.about-facts li{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:4px}
+.about-facts b{font-size:1.02rem}
+.about-facts span{color:rgba(255,255,255,.75);font-size:.92rem}
+/* ───── чек-лист ───── */
+.lead{padding-block:56px}
+.lead-box{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:center;background:linear-gradient(135deg,#F9E7D0,#F1DDE8);border-radius:28px;padding-block:32px;padding-left:max(36px,env(safe-area-inset-left,0px));padding-right:max(36px,env(safe-area-inset-right,0px));border:2px solid #E8D3B4}
+.lead-box>*{min-width:0}
+.lead-doc{width:150px;aspect-ratio:3/4;background:var(--card);border-radius:12px;box-shadow:0 20px 40px -15px rgba(18,11,26,.35);transform:rotate(-6deg);padding:16px;display:flex;flex-direction:column;gap:8px;border-top:8px solid var(--pink)}
+.lead-doc b{font:900 .9rem var(--display)}
+.lead-doc span{font-size:.7rem;color:var(--muted);font-weight:700}
+.lead-doc i{display:block;height:6px;border-radius:3px;background:var(--line)}
+.lead-doc i:nth-of-type(odd){width:80%}
+/* ───── финал ───── */
+.final{background:radial-gradient(60% 80% at 50% 0%,rgba(194,24,91,.5),transparent 70%),var(--night);color:#fff;text-align:center}
+.final-box{display:flex;flex-direction:column;align-items:center;gap:18px}
+.final h2{max-width:22ch}
+.final h2 em{background:var(--gold);-webkit-background-clip:text;background-clip:text;color:transparent}
+.final p{color:rgba(255,255,255,.8);max-width:56ch;margin:0;font-size:1.08rem}
+.final-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 20px;color:#E2B54A;font-weight:700;font-size:.92rem}
+@media (max-width:900px){.calc-box,.about-grid{grid-template-columns:1fr}.calc-out{position:static}}
+@media (max-width:520px){.lead-box{grid-template-columns:1fr;padding-block:24px}.lead-doc{width:110px}.about-facts{grid-template-columns:1fr}.total{font-size:2.2rem}}
+
+/* ───── подвал ───── */
+footer .foot{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.foot-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.foot-col b{color:#fff}
+.foot-col a{color:#E2B54A;text-decoration:none}
+.foot-col a:hover{text-decoration:underline}
+@media (max-width:700px){footer .foot{grid-template-columns:1fr}}
+
+/* ───── плавающая кнопка заказа ───── */
+.fab{position:fixed;z-index:50;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;align-items:center;gap:10px;padding:16px 22px;border-radius:999px;background:var(--gold);color:var(--night);font:900 1rem var(--body);text-decoration:none;box-shadow:0 12px 40px -8px rgba(226,181,74,.8),0 0 0 4px rgba(18,11,26,.85);animation:pulse 2.4s ease-in-out infinite}
+.fab small{display:block;font:700 .72rem var(--body);opacity:.75}
+@keyframes pulse{50%{box-shadow:0 12px 50px -4px rgba(226,181,74,1),0 0 0 8px rgba(226,181,74,.25)}}
+@media (max-width:520px){.fab{left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));justify-content:center}}
+
+/* ───── гарантии ───── */
+.dark{background:var(--night);color:#fff}
+.dark .sub{color:rgba(255,255,255,.75)}
+.why{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.why div{min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:24px}
+.why .ico{font-size:2rem;display:block;margin-bottom:10px}
+.why h3{font-size:1.05rem;margin-bottom:8px}
+.why p{margin:0;color:rgba(255,255,255,.75);font-size:.97rem}
+.why .main{background:var(--gold);color:var(--night);border:0}
+.why .main p{color:var(--night)}
+
+/* ───── шаги ───── */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.steps div{min-width:0;background:var(--card);border-radius:20px;padding:24px;border:2px solid var(--line);position:relative}
+.steps .n{font:900 2.6rem var(--display);color:var(--pink);line-height:1}
+.steps h3{font-size:1.05rem;margin:12px 0 6px}
+.steps p{margin:0;color:var(--muted);font-size:.95rem}
+
+/* ───── отзывы ───── */
+.rev{display:grid;grid-template-columns:1.3fr .7fr;gap:28px;align-items:center;background:linear-gradient(135deg,#F9E7D0,#F1DDE8);border-radius:28px;padding:36px}
+.rev>div{min-width:0}
+.rev p{margin:12px 0 0;font-size:1.08rem}
+.slots{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.slots span{width:56px;height:56px;border-radius:50%;background:var(--card);border:3px dashed var(--pink);display:grid;place-items:center;font:900 1.1rem var(--display);color:var(--pink)}
+.slots small{flex-basis:100%;text-align:center;font-weight:800;color:var(--pink)}
+
+/* ───── бот ───── */
+.bot-wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;align-items:center}
+.bot-wrap>*{min-width:0}
+.bot{background:var(--card);border-radius:26px;overflow:hidden;box-shadow:0 30px 70px -30px rgba(23,11,51,.45);border:2px solid var(--line)}
+.bot-top{display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--night);color:#fff}
+.ava{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--violet));display:grid;place-items:center;font-size:1.3rem}
+.bot-top small{display:block;color:var(--mint);font-size:.8rem;font-weight:700}
+.msgs{height:360px;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px;background:#FBF6EF}
+.m{max-width:85%;padding:11px 15px;border-radius:18px;font-size:.98rem;white-space:pre-line;animation:pop .25s ease-out}
+.m.b{background:var(--card);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.m.u{background:var(--pink);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;font-weight:700}
+@keyframes pop{from{transform:translateY(8px) scale(.97);opacity:.4}}
+.opts{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px}
+.opts button{border:2px solid var(--pink);background:var(--card);color:var(--pink);font:800 .92rem var(--body);padding:9px 15px;border-radius:12px;cursor:pointer}
+.opts button:hover{background:var(--pink);color:#fff}
+.inp{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line)}
+.inp input{flex:1;min-width:0;border:2px solid var(--line);background:#FBF6EF;color:var(--ink);border-radius:12px;padding:12px 14px;font:1rem var(--body)}
+.inp button{border:0;background:var(--pink);color:#fff;border-radius:12px;padding:0 20px;font:900 1.2rem var(--body);cursor:pointer}
+.done{padding:14px 18px 18px;display:flex;flex-wrap:wrap;gap:10px}
+.done .btn{padding:14px 20px;font-size:.95rem}
+.btn-line{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.bullets{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:12px;font-weight:700}
+
+/* ───── FAQ ───── */
+.faq details{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:18px 20px;max-width:780px}
+.faq details+details{margin-top:12px}
+.faq summary{cursor:pointer;font-weight:800;font-size:1.05rem}
+.faq p{margin:10px 0 0;color:var(--muted)}
+footer{background:var(--night);color:rgba(255,255,255,.7);padding-block:36px;font-size:.9rem}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+
+@media (max-width:900px){
+  .hero-grid,.ba-grid,.bot-wrap,.rev{grid-template-columns:1fr}
+  .stack{height:400px}
+  .gallery,.why{grid-template-columns:repeat(2,1fr)}
+  .prices{grid-template-columns:1fr}.price.hot{transform:none}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .stage{justify-self:center}
+}
+@media (max-width:520px){
+  body{font-size:16px}
+  section{padding-block:52px}
+  .gallery{grid-template-columns:1fr 1fr;gap:12px}.work{font-size:10px}
+  .why,.steps{grid-template-columns:1fr}
+  .feed{padding:18px}.feed-row{grid-template-columns:repeat(2,1fr);gap:22px 12px}
+  .stack{height:340px}.stack .pc{width:200px;font-size:12px}
+  .sticker{width:90px;height:90px;font-size:.85rem}
+  .diff div{grid-template-columns:1fr;gap:2px}.diff i{display:none}
+  .rev{padding:24px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <nav>
+      <a class="logo" href="#" aria-label="ALSA"><svg viewBox="0 0 300 60" role="img" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE9A0"/><stop offset=".45" stop-color="#E2B54A"/><stop offset="1" stop-color="#B8862B"/></linearGradient></defs><g fill="url(#lg)"><polygon points="0,60 31,0 45,0 76,60 60,60 38,17 16,60"/><path d="M90 0H104V46H140V60H90Z"/><polygon transform="translate(224 0)" points="0,60 31,0 45,0 76,60 60,60 38,17 16,60"/></g><path d="M213 6.5H166Q158.5 6.5 158.5 14V22.5Q158.5 30 166 30H198Q205.5 30 205.5 37.5V46Q205.5 53.5 198 53.5H151" fill="none" stroke="url(#lg)" stroke-width="13"/></svg></a>
+      <div class="nav-right">
+        <div class="lang" role="group" aria-label="Language"><button type="button" data-l="ru" lang="ru">RU</button><button type="button" data-l="en" lang="en">EN</button><button type="button" data-l="zh" lang="zh">中文</button><button type="button" data-l="hy" lang="hy">HY</button><button type="button" data-l="kk" lang="kk">KZ</button></div>
+        <a class="nav-cta" href="#bot">Оставить заявку</a>
+      </div>
+    </nav>
+    <div class="hero-grid">
+      <div>
+        <span class="tag">WB · Ozon · Яндекс Маркет · Мегамаркет · Avito · Amazon</span>
+        <h1>Товар не продаётся? <em>Найду причину и исправлю.</em></h1>
+        <p>От вас нужна только <b style="color:#E2B54A">ссылка на товар или артикул</b>. Я разберу карточку и скажу, что в ней лишнее и чего не хватает. А если хотите, сама исправлю всё под ключ.</p>
+        <div class="cta">
+          <a class="btn btn-y" href="#bot" data-pick="Разбор карточки">Разобрать мою карточку</a>
+          <a class="btn btn-o" href="#audit">Что я проверяю</a>
+        </div>
+      </div>
+      <div class="stack" id="stack" aria-label="Примеры карточек">
+        <div class="sticker"><div>−30%<small>первым 5 клиентам</small></div></div>
+      </div>
+    </div>
+
+    <div class="services" aria-label="Мои услуги">
+      <div class="svc">
+        <span class="svc-ico">🔍</span>
+        <div class="svc-body">
+          <span class="svc-n">Услуга 1</span>
+          <h3>Разбор карточки</h3>
+          <p>Пришлите ссылку или артикул товара. Найду, почему его не покупают: фото, название, SEO, описание, цена, отзывы. Пришлю отчёт с планом исправлений.</p>
+        </div>
+        <div class="svc-foot"><b>от 1 500 ₽</b><a class="btn btn-o" href="#audit">4 пакета</a></div>
+      </div>
+      <div class="svc best">
+        <span class="svc-flag">⭐ Выгоднее всего</span>
+        <span class="svc-ico">🚀</span>
+        <div class="svc-body">
+          <span class="svc-n">Услуга 2</span>
+          <h3>Всё под ключ</h3>
+          <p>Разбираю карточку и сама исправляю всё, что мешает продажам: фото, дизайн, название, описание, SEO.</p>
+        </div>
+        <div class="svc-foot"><b>от 9 900 ₽</b><a class="btn btn-y" href="#bot" data-pick="Всё под ключ">Хочу под ключ</a></div>
+      </div>
+      <div class="svc">
+        <span class="svc-ico">🎨</span>
+        <div class="svc-body">
+          <span class="svc-n">Услуга 3</span>
+          <h3>Дизайн карточек</h3>
+          <p>Главное фото, инфографика, логотип и rich-контент. Могу сама сфотографировать ваш товар.</p>
+        </div>
+        <div class="svc-foot"><b>от 3 150 ₽</b><a class="btn btn-o" href="#prices">Цены</a></div>
+      </div>
+    </div>
+    <div class="proof">
+      <div><b>24 часа</b>на разбор карточки</div>
+      <div><b>2–3 дня</b>на дизайн</div>
+      <div><b>4 пакета</b>разбора на выбор</div>
+      <div><b>10 площадок</b>WB, Ozon, Яндекс, AliExpress и другие</div>
+    </div>
+  </div>
+</header>
+
+<!-- РАЗБОР КАРТОЧКИ -->
+<section id="audit" class="audit">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Разбор карточки</span>
+      <h2>Почему у вас <em>нет продаж?</em></h2>
+      <p class="sub">Покупатель решает за 2 секунды. Я проверяю всё, что он видит, и нахожу, где вы теряете деньги. От вас нужна только ссылка на товар или его артикул на Wildberries, Ozon, Яндекс Маркете, Мегамаркете, Avito, AliExpress, Lamoda, Магнит Маркете, Amazon или Etsy.</p>
+    </div>
+    <div class="audit-grid">
+      <div class="checklist">
+        <h3>Что я проверяю</h3>
+        <ul>
+          <li>📸 Главное фото: видно ли товар в поиске</li>
+          <li>🖼️ Слайды: есть ли ответы на вопросы покупателя</li>
+          <li>🔤 Название и SEO: по каким словам вас находят</li>
+          <li>📝 Описание и характеристики: что заполнено, что пусто</li>
+          <li>💰 Цена: как вы выглядите рядом с конкурентами</li>
+          <li>⭐ Отзывы и вопросы: отвечаете ли вы, что пугает людей</li>
+          <li>🏷️ Акции и скидки: участвуете ли вы</li>
+          <li>🎬 Видео и rich-контент: есть ли они у вас и у конкурентов</li>
+        </ul>
+      </div>
+      <div class="report">
+        <div class="rep-head">
+          <div><small>Пример отчёта</small><b>Кроссовки беговые</b></div>
+          <div class="score"><b>54</b><small>из 100</small></div>
+        </div>
+        <ul class="rep">
+          <li class="bad"><span>✕</span><div><b>Главное фото тёмное</b><small>В поиске товар не видно. Нужен светлый фон и крупный план.</small></div></li>
+          <li class="bad"><span>✕</span><div><b>В названии нет «для бега»</b><small>Теряете главный поисковый запрос.</small></div></li>
+          <li class="warn"><span>!</span><div><b>Лишний текст на слайдах</b><small>8 строк мелкого текста. Оставить 3 главных плюса.</small></div></li>
+          <li class="warn"><span>!</span><div><b>Нет слайда с размерами</b><small>Из-за этого много вопросов и возвратов.</small></div></li>
+          <li class="ok"><span>✓</span><div><b>Цена в рынке</b><small>На 4% ниже среднего у конкурентов.</small></div></li>
+        </ul>
+        <div class="rep-foot">План: 6 исправлений → ожидаемый рост кликов</div>
+      </div>
+    </div>
+    <div class="head" style="margin-top:56px">
+      <span class="tag">Пакеты разбора</span>
+      <h2><em>Глубина разбора</em> на ваш выбор</h2>
+      <p class="sub">Чем больше пакет, тем глубже я копаю и тем подробнее отчёт. Стоимость любого разбора вычту, если потом закажете исправление.</p>
+    </div>
+    <div class="tiers">
+      <div class="tier">
+        <span class="t-ico">🔍</span><h3>Экспресс</h3>
+        <div class="t-sum">1 500 ₽</div><div class="t-time">⏱ 24 часа</div>
+        <p class="t-for">Быстро понять, в фото ли проблема</p>
+        <ul>
+          <li>Главное фото и все слайды</li>
+          <li>Сравнение фото с 5 конкурентами</li>
+          <li>Есть ли главный запрос в названии</li>
+          <li>Проверка цены рядом с конкурентами</li>
+        </ul>
+        <div class="t-rep">📄 Отчёт: 1 страница, 5–7 правок по фото</div>
+        <a class="btn btn-line" href="#bot" data-pick="Разбор «Экспресс»">Выбрать</a>
+      </div>
+      <div class="tier">
+        <span class="t-ico">📊</span><h3>Стандарт</h3>
+        <div class="t-sum">3 500 ₽</div><div class="t-time">⏱ 48 часов</div>
+        <p class="t-for">Найти все причины низких продаж</p>
+        <ul>
+          <li>Всё из «Экспресс»</li>
+          <li>SEO: подбор 10–15 поисковых запросов</li>
+          <li>Описание и характеристики</li>
+          <li>Цена против 10 конкурентов</li>
+          <li>Отзывы и вопросы покупателей</li>
+        </ul>
+        <div class="t-rep">📄 Отчёт PDF: 5–7 страниц + пошаговый план</div>
+        <a class="btn btn-line" href="#bot" data-pick="Разбор «Стандарт»">Выбрать</a>
+      </div>
+      <div class="tier best">
+        <span class="svc-flag">⭐ Самый полный</span>
+        <span class="t-ico">🧠</span><h3>Глубокий</h3>
+        <div class="t-sum">7 500 ₽</div><div class="t-time">⏱ 3 дня</div>
+        <p class="t-for">Разобрать товар и нишу до мелочей</p>
+        <ul>
+          <li>Всё из «Стандарт»</li>
+          <li>Анализ ниши: топ-20 конкурентов</li>
+          <li>Воронка: показы → клики → корзина → заказы</li>
+          <li>Акции, реклама, rich-контент и видео</li>
+          <li>Концепт нового главного фото</li>
+        </ul>
+        <div class="t-rep">📄 Отчёт: 10–15 страниц + видеоразбор 15 минут</div>
+        <a class="btn btn-y" href="#bot" data-pick="Разбор «Глубокий»">Выбрать</a>
+      </div>
+      <div class="tier">
+        <span class="t-ico">🏪</span><h3>Магазин целиком</h3>
+        <div class="t-sum">от 14 900 ₽</div><div class="t-time">⏱ 5 дней</div>
+        <p class="t-for">Для продавцов с несколькими товарами</p>
+        <ul>
+          <li>До 10 товаров по пакету «Глубокий»</li>
+          <li>Ассортимент и цены всего магазина</li>
+          <li>Единый стиль бренда</li>
+          <li>План роста на 30 дней</li>
+          <li>Созвон 30 минут</li>
+        </ul>
+        <div class="t-rep">📄 Отчёт по магазину + план на месяц</div>
+        <a class="btn btn-line" href="#bot" data-pick="Разбор магазина">Выбрать</a>
+      </div>
+    </div>
+    <p class="t-note">Для пакетов «Глубокий» и «Магазин» попрошу скриншоты статистики из вашего личного кабинета, чтобы видеть реальные цифры.</p>
+
+    <div class="audit-cta">
+      <div><b>Сделать самому?</b><span>Получите отчёт от 1 500 ₽ и исправите по плану.</span></div>
+      <div class="or">или</div>
+      <div><b>Доверить мне?</b><span>Исправлю всё под ключ от 9 900 ₽, разбор бесплатно.</span></div>
+      <a class="btn btn-y" href="#bot" data-pick="Разбор карточки">Отправить ссылку или артикул</a>
+    </div>
+  </div>
+</section>
+
+<div class="marquee" aria-hidden="true"><div id="mq"></div></div>
+
+<!-- ДО / ПОСЛЕ -->
+<section id="ba">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Было → Стало</span>
+      <h2>Один и тот же товар. <em>Разные продажи.</em></h2>
+      <p class="sub">Двигайте розовый кружок влево и вправо. Слева обычное фото с телефона. Справа та же вещь после моего дизайна.</p>
+    </div>
+    <div class="ba-grid">
+      <div class="stage" id="stage">
+        <div class="before">
+          <div class="note">IMG_4521.jpg</div>
+        </div>
+        <div class="after" id="after"></div>
+        <span class="lbl l-b">БЫЛО</span><span class="lbl l-a">СТАЛО</span>
+        <div class="handle" aria-hidden="true"><span>⟷</span></div>
+        <input type="range" id="cut" min="0" max="100" value="45" aria-label="Сравнить было и стало">
+      </div>
+      <div>
+        <div class="diff">
+          <div><span class="no">Тёмное фото на столе</span><i>→</i><span class="yes">Яркий фон, товар крупно</span></div>
+          <div><span class="no">Непонятно, что это</span><i>→</i><span class="yes">Крупное название сверху</span></div>
+          <div><span class="no">Никаких плюсов товара</span><i>→</i><span class="yes">3 причины купить</span></div>
+          <div><span class="no">Теряется среди других</span><i>→</i><span class="yes">Метка «Хит» цепляет взгляд</span></div>
+        </div>
+        <div class="hint">👈 Потяните кружок на картинке</div>
+      </div>
+    </div>
+
+    <div class="feed">
+      <h3>Вот так покупатель видит поиск на Wildberries</h3>
+      <p>Четыре одинаковых товара. Какой откроете вы?</p>
+      <div class="feed-row" id="feed"></div>
+    </div>
+  </div>
+</section>
+
+<!-- РАБОТЫ -->
+<section id="works" style="background:#fff">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Примеры работ</span>
+      <h2>Карточки для <em>любых товаров</em></h2>
+    </div>
+    <div class="filters" id="filters">
+      <button type="button" aria-pressed="true" data-f="all">Все</button>
+      <button type="button" aria-pressed="false" data-f="style">👟 Одежда и обувь</button>
+      <button type="button" aria-pressed="false" data-f="beauty">💄 Красота</button>
+      <button type="button" aria-pressed="false" data-f="tech">🎧 Техника</button>
+      <button type="button" aria-pressed="false" data-f="home">🏠 Дом и дети</button>
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <p class="ex">Это демонстрационные примеры стиля. Для вас сделаю дизайн под ваш товар и ваших конкурентов.</p>
+  </div>
+</section>
+
+<!-- ЦЕНЫ -->
+<section id="prices">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Цены</span>
+      <h2>Выберите <em>пакет</em></h2>
+      <p class="sub">Цены фиксированные. Никаких скрытых доплат.</p>
+    </div>
+    <div class="prices">
+      <div class="price">
+        <span class="ico">📸</span>
+        <h3>Главное фото</h3>
+        <div class="sum">1 500 ₽</div>
+        <ul><li>1 обложка карточки</li><li>Готово за 1 день</li><li>2 правки бесплатно</li></ul>
+        <a class="btn btn-line" href="#bot" data-pick="Главное фото">Выбрать</a>
+      </div>
+      <div class="price hot">
+        <span class="flag">🔥 Скидка 30% первым 5</span>
+        <h3>Старт</h3>
+        <div class="sum">3 150 ₽<s>4 500</s></div>
+        <ul><li>Главное фото</li><li>4 слайда с плюсами товара</li><li>Готово за 2 дня</li><li>2 правки бесплатно</li></ul>
+        <a class="btn btn-y" href="#bot" data-pick="Пакет «Старт»">Хочу этот</a>
+      </div>
+      <div class="price">
+        <span class="ico">🚀</span>
+        <h3>Продажи</h3>
+        <div class="sum">7 900 ₽</div>
+        <ul><li>Главное фото + 7 слайдов</li><li>Продающий текст и SEO</li><li>Готово за 3 дня</li><li>Разбор конкурентов</li></ul>
+        <a class="btn btn-line" href="#bot" data-pick="Пакет «Продажи»">Выбрать</a>
+      </div>
+    </div>
+    <div class="extra"><span>➕ 1 слайд: 1 200 ₽</span><span>➕ Rich-контент: от 5 000 ₽</span><span>🔍 Разбор карточки: 1 500 ₽</span><span>🚀 Всё под ключ: от 9 900 ₽</span></div>
+
+    <div class="brand" id="logo">
+      <div class="brand-text">
+        <span class="tag">Новое · Брендинг</span>
+        <h2>Логотип и карточки <em>в одном стиле</em></h2>
+        <p>Создаю логотип для вашего бренда, а потом оформляю все карточки в его цветах и шрифтах. Покупатель сразу узнаёт ваш магазин среди сотен других.</p>
+      </div>
+      <div class="brand-cards">
+        <div class="bc">
+          <span class="ico">✏️</span>
+          <h3>Логотип</h3>
+          <div class="sum">3 500 ₽</div>
+          <ul><li>3 варианта на выбор</li><li>Цвета и шрифты бренда</li><li>Файлы PNG, SVG, PDF</li></ul>
+          <a class="btn btn-line" href="#bot" data-pick="Логотип">Заказать логотип</a>
+        </div>
+        <div class="bc hot2">
+          <span class="flag">💥 Скидка 10% на всё</span>
+          <h3>Логотип + карточки</h3>
+          <div class="sum">7 200 ₽<s>8 000</s></div>
+          <ul><li>Логотип</li><li>Пакет «Старт» в стиле бренда</li><li>Единый вид всего магазина</li></ul>
+          <a class="btn btn-y" href="#bot" data-pick="Логотип + карточки">Хочу со скидкой</a>
+        </div>
+      </div>
+      <p class="brand-note">Скидка 10% действует при заказе логотипа вместе с любым пакетом карточек. Например, логотип + «Продажи»: <b>10 260 ₽</b> вместо 11 400 ₽.</p>
+    </div>
+  </div>
+</section>
+
+<!-- КАЛЬКУЛЯТОР -->
+<section id="calc" class="calc">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Калькулятор</span>
+      <h2>Посчитайте цену <em>за 10 секунд</em></h2>
+      <p class="sub">Выберите услугу и количество товаров. Цена считается сразу, без звонков и переписки.</p>
+    </div>
+    <div class="calc-box">
+      <div class="calc-in">
+        <fieldset>
+          <legend>1. Что нужно?</legend>
+          <div class="seg" id="cService">
+            <label><input type="radio" name="svc" value="audit" checked><span>🔍 Экспресс<small>1 500 ₽</small></span></label>
+            <label><input type="radio" name="svc" value="std"><span>📊 Стандарт<small>3 500 ₽</small></span></label>
+            <label><input type="radio" name="svc" value="deep"><span>🧠 Глубокий<small>7 500 ₽</small></span></label>
+            <label><input type="radio" name="svc" value="shop"><span>🏪 Магазин<small>14 900 ₽</small></span></label>
+            <label><input type="radio" name="svc" value="main"><span>📸 Главное фото<small>1 500 ₽</small></span></label>
+            <label><input type="radio" name="svc" value="start"><span>⭐ «Старт»<small>3 150 ₽</small></span></label>
+            <label><input type="radio" name="svc" value="sales"><span>🚀 «Продажи»<small>7 900 ₽</small></span></label>
+            <label><input type="radio" name="svc" value="key"><span>🔑 Под ключ<small>9 900 ₽</small></span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>2. Сколько товаров? <b id="cQtyOut">1</b></legend>
+          <input type="range" id="cQty" min="1" max="20" value="1" aria-label="Количество товаров">
+          <div class="hint-row"><span>1</span><span>от 3 товаров −15%</span><span>20</span></div>
+        </fieldset>
+        <fieldset>
+          <legend>3. Дополнительно</legend>
+          <label class="chk"><input type="checkbox" id="cLogo"><span>✏️ Логотип +3 500 ₽ <em>и −10% на всё</em></span></label>
+          <label class="chk"><input type="checkbox" id="cShoot"><span>📦 Сфотографировать мой товар +1 000 ₽ за товар</span></label>
+          <label class="chk"><input type="checkbox" id="cFast"><span>⚡ Срочно, за 24 часа +30%</span></label>
+        </fieldset>
+      </div>
+      <div class="calc-out">
+        <small>Итого</small>
+        <div class="total"><span id="cTotal">1 500</span> ₽</div>
+        <div class="save" id="cSave" hidden></div>
+        <ul id="cLines"></ul>
+        <a class="btn btn-y" id="cSend" href="#" target="_blank" rel="noopener">✈️ Отправить расчёт в Telegram</a>
+        <p class="note">Точную цену подтвержу после того, как посмотрю ваш товар.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ОТПРАВЬТЕ ТОВАР -->
+<section id="send" class="send">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Нет фото? Не проблема</span>
+      <h2>Пришлите товар. <em>Сфотографирую сама.</em></h2>
+      <p class="sub">Не нужно ничего снимать. Отправьте мне образец, я сделаю студийные фото и сразу оформлю карточку. Вернуть товар можно по вашему желанию.</p>
+    </div>
+    <div class="send-steps">
+      <div><span class="ico">📦</span><b>1. Отправляете товар</b><p>Любой службой доставки. Адрес пришлю в Telegram после заявки.</p></div>
+      <div><span class="ico">📸</span><b>2. Студийная съёмка</b><p>Снимаю товар со всех сторон, при хорошем свете и на чистом фоне.</p></div>
+      <div><span class="ico">🎨</span><b>3. Готовая карточка</b><p>Делаю дизайн из своих фото и присылаю результат.</p></div>
+      <div><span class="ico">↩️</span><b>4. Возврат по желанию</b><p>Хотите получить товар обратно? Отправлю той же службой, доставку обратно оплачиваете вы. Не нужен возврат? Ничего платить не надо.</p></div>
+    </div>
+    <div class="carriers">
+      <b>Чем можно отправить:</b>
+      <div class="chips">
+        <span class="wb">🟣 Wildberries · WB Track</span>
+        <span>🟢 СДЭК</span>
+        <span>🔵 Почта России</span>
+        <span>🟠 Boxberry</span>
+        <span>🟡 Яндекс Доставка</span>
+        <span>🔴 5Post</span>
+        <span>🟦 Ozon · доставка посылок</span>
+      </div>
+      <p class="tip"><b>Удобно через Wildberries:</b> в приложении WB откройте «Профиль» → «Отправка посылок» (WB Track), принесите товар в ближайший пункт выдачи WB, и он приедет в мой пункт. Доставка через Ozon пока доступна не во всех городах, проверьте в приложении Ozon в разделе «Доставка посылок».</p>
+    </div>
+    <div class="send-price">
+      <div><b>Съёмка товара</b><span>+1 000 ₽ к любому пакету</span></div>
+      <div class="free"><b>В пакете «Продажи»</b><span>съёмка бесплатно</span></div>
+      <a class="btn btn-p" href="#bot" data-pick="Пришлю товар на съёмку">Отправить товар на съёмку</a>
+    </div>
+  </div>
+</section>
+
+<!-- СРАВНЕНИЕ -->
+<section id="compare">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Сравните</span>
+      <h2>Почему <em>ALSA</em>, а не кто-то другой</h2>
+    </div>
+    <div class="cmp-wrap">
+      <table class="cmp">
+        <thead><tr><th></th><th>Дешёвый фрилансер</th><th>Агентство</th><th class="me">ALSA</th></tr></thead>
+        <tbody>
+          <tr><th>Цена</th><td>от 500 ₽</td><td>от 15 000 ₽ в месяц</td><td class="me">от 3 150 ₽ разово</td></tr>
+          <tr><th>Сам продаёт на маркетплейсах</th><td class="no">✕</td><td class="mid">иногда</td><td class="me yes">✓ да</td></tr>
+          <tr><th>Разбор перед дизайном</th><td class="no">✕</td><td class="mid">за доплату</td><td class="me yes">✓ входит</td></tr>
+          <tr><th>Замер CTR до и после</th><td class="no">✕</td><td class="mid">иногда</td><td class="me yes">✓ всегда</td></tr>
+          <tr><th>Возврат денег</th><td class="no">✕</td><td class="no">✕</td><td class="me yes">✓ да</td></tr>
+          <tr><th>Срок</th><td>как получится</td><td>1–2 недели</td><td class="me">2–3 дня</td></tr>
+          <tr><th>Все площадки</th><td class="mid">1–2</td><td class="yes">✓</td><td class="me yes">✓ 10 площадок</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- КТО Я -->
+<section class="about dark">
+  <div class="wrap about-grid">
+    <div>
+      <span class="tag">Кто делает ваши карточки</span>
+      <h2 style="margin-top:14px">Я не просто дизайнер. <em>Я продавец.</em></h2>
+      <p class="sub">Я сама продаю на Wildberries и Ozon. Каждый день смотрю на свою статистику и вижу, какие карточки кликают, а какие нет. Поэтому делаю дизайн, который приносит заказы, а не просто красивую картинку.</p>
+    </div>
+    <ul class="about-facts">
+      <li><b>🛒 Свой магазин</b><span>Знаю личный кабинет продавца изнутри</span></li>
+      <li><b>🎨 Дизайнер</b><span>Фото, инфографика, логотипы, rich-контент</span></li>
+      <li><b>📊 Работаю с цифрами</b><span>Смотрю CTR, конверсию и поисковые запросы</span></li>
+      <li><b>🌍 Россия и зарубежье</b><span>WB, Ozon, Яндекс Маркет, Amazon, Etsy</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ЧЕК-ЛИСТ -->
+<section class="lead">
+  <div class="wrap lead-box">
+    <div class="lead-doc" aria-hidden="true"><b>ЧЕК-ЛИСТ</b><span>12 ошибок в карточке</span><i></i><i></i><i></i><i></i></div>
+    <div>
+      <span class="tag">Подарок</span>
+      <h2 style="margin-top:14px">Чек-лист <em>«12 ошибок, из-за которых карточку не покупают»</em></h2>
+      <p class="sub">Проверьте свою карточку сами за 10 минут. Напишите мне в Telegram слово «ЧЕКЛИСТ», и я пришлю его бесплатно.</p>
+      <a class="btn btn-y" id="leadBtn" href="https://t.me/syuzli" target="_blank" rel="noopener">🎁 Получить чек-лист</a>
+    </div>
+  </div>
+</section>
+
+<!-- ГАРАНТИИ -->
+<section class="dark">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Без риска</span>
+      <h2>Мои <em>гарантии</em></h2>
+      <p class="sub">Вы ничем не рискуете.</p>
+    </div>
+    <div class="why">
+      <div class="main"><span class="ico">💸</span><h3>Не понравится, верну деньги</h3><p>Если первый вариант совсем не ваш, возвращаю всю предоплату.</p></div>
+      <div><span class="ico">🛒</span><h3>Я сама продавец</h3><p>Знаю правила WB и Ozon изнутри. Делаю так, чтобы покупали, а не просто любовались.</p></div>
+      <div><span class="ico">🔍</span><h3>Смотрю конкурентов</h3><p>Перед работой изучаю 10 лучших карточек в вашей нише, чтобы вы выделялись.</p></div>
+      <div><span class="ico">⏰</span><h3>Вовремя или скидка</h3><p>Опоздала хоть на день, минус 10% от цены.</p></div>
+      <div><span class="ico">📁</span><h3>Отдаю файлы</h3><p>По запросу дам исходники, чтобы вы сами меняли цены и акции.</p></div>
+      <div><span class="ico">🌍</span><h3>И для Amazon</h3><p>Белый фон, A+ контент и тексты на английском.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ШАГИ -->
+<section>
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Как работаем</span>
+      <h2>4 простых <em>шага</em></h2>
+    </div>
+    <div class="steps">
+      <div><div class="n">1</div><h3>Пишете мне</h3><p>Ссылка на товар и что в нём хорошего.</p></div>
+      <div><div class="n">2</div><h3>Обсуждаем</h3><p>Бесплатно подскажу, какая услуга вам нужна.</p></div>
+      <div><div class="n">3</div><h3>Делаю дизайн</h3><p>Вы платите половину, через 2–3 дня готово.</p></div>
+      <div><div class="n">4</div><h3>Принимаете</h3><p>Правки бесплатно, потом оплата остатка.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ОТЗЫВЫ -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="rev">
+      <div>
+        <span class="tag">Отзывы</span>
+        <h2 style="margin-top:14px">Станьте моим <em>первым клиентом</em></h2>
+        <p>Студия только открылась, поэтому отзывов пока нет. Честно. Зато первые 5 клиентов получают скидку 30%. Взамен прошу отзыв и цифры: сколько кликов было до и стало после.</p>
+      </div>
+      <div class="slots"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><small>Свободно 5 мест из 5</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- БОТ -->
+<section id="bot" style="background:#fff">
+  <div class="wrap bot-wrap">
+    <div>
+      <span class="tag">Заявка за 1 минуту</span>
+      <h2 style="margin-top:14px">Ответьте на <em>5 вопросов</em></h2>
+      <p class="sub">Бот спросит про ваш товар и сразу скажет примерную цену. Потом нажмите «Отправить заявку в Telegram», и заявка придёт мне.</p>
+      <ul class="bullets"><li>✅ Заявка бесплатная</li><li>✅ Ни к чему не обязывает</li><li>✅ Отвечу в течение часа</li></ul>
+    </div>
+    <div class="bot">
+      <div class="bot-top"><div class="ava">🤖</div><div><b>Помощник ALSA</b><small>● онлайн</small></div></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="opts" id="opts"></div>
+      <form class="inp" id="inp" hidden>
+        <input id="txt" autocomplete="off" placeholder="Напишите ответ…">
+        <button type="submit" aria-label="Отправить">→</button>
+      </form>
+      <div class="done" id="done" hidden>
+        <a class="btn btn-y" id="tg" href="#" target="_blank" rel="noopener">✈️ Отправить заявку в Telegram</a>
+        <button class="btn btn-p" id="copy" type="button">📋 Скопировать заявку</button>
+        <button class="btn btn-line" id="again" type="button">Заново</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ОПЛАТА -->
+<section id="pay" class="pay">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Оплата</span>
+      <h2>Платите <em>как удобно</em></h2>
+      <p class="sub">Работаю официально как ИП. Ссылку на оплату или счёт пришлю в Telegram после заявки, а после оплаты вы получите кассовый чек.</p>
+    </div>
+    <div class="pay-grid">
+      <div class="pm"><span>⚡</span><b>СБП</b><small>По QR-коду или ссылке из приложения любого банка</small></div>
+      <div class="pm"><span>💳</span><b>Банковская карта</b><small>МИР, Visa, Mastercard любого банка РФ</small></div>
+      <div class="pm"><span>🔗</span><b>Ссылка на оплату</b><small>Пришлю ссылку, оплата за 1 минуту на защищённой странице</small></div>
+      <div class="pm"><span>📱</span><b>С телефона</b><small>Открываете ссылку и платите в пару касаний</small></div>
+      <div class="pm"><span>🧾</span><b>Счёт для ИП и ООО</b><small>Счёт на оплату с расчётного счёта, акт выполненных работ</small></div>
+      <div class="pm"><span>🌍</span><b>Из-за рубежа</b><small>Для клиентов из других стран подберём удобный способ</small></div>
+    </div>
+    <div class="pay-steps">
+      <h3>Как проходит оплата</h3>
+      <ol>
+        <li><b>Оставляете заявку</b><span>Через бота, калькулятор или пишете в Telegram @syuzli</span></li>
+        <li><b>Получаете ссылку</b><span>Пришлю сумму, срок и ссылку на оплату в Telegram. Ничего не нужно искать</span></li>
+        <li><b>Платите 50%</b><span>Открываете ссылку из моего сообщения и платите картой или по СБП. Компании платят по счёту</span></li>
+        <li><b>Получаете чек</b><span>Сразу после оплаты пришлю чек, и начинаю работу</span></li>
+        <li><b>Вторые 50% после результата</b><span>Когда вы приняли работу. Не понравилось? Верну предоплату</span></li>
+      </ol>
+    </div>
+    <div class="pay-terms">
+      <div><b>50% / 50%</b><span>Половина перед началом, половина после результата</span></div>
+      <div><b>🧾 Официальный чек</b><span>Работаю как ИП, кассовый чек на каждую оплату, акт для компаний</span></div>
+      <div><b>💸 Возврат</b><span>Не понравился первый вариант? Верну предоплату</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <div class="wrap">
+    <div class="head"><span class="tag">Вопросы</span><h2>Частые <em>вопросы</em></h2></div>
+    <details><summary>Нужны профессиональные фото?</summary><p>Нет. Хватит чётких фото с телефона. Или пришлите сам товар через WB Track, СДЭК или почту, я сфотографирую его сама.</p></details>
+    <details><summary>Как платить?</summary><p>Половину перед началом, половину после. По ссылке картой или через СБП, компании по счёту на расчётный счёт. Работаю как ИП, кассовый чек на каждую оплату.</p></details>
+    <details><summary>А если мне не понравится?</summary><p>2 правки бесплатно. Если первый вариант совсем не ваш, верну предоплату.</p></details>
+    <details><summary>С какими площадками работаете?</summary><p>Wildberries, Ozon, Яндекс Маркет, Мегамаркет, Avito, AliExpress, Lamoda, Магнит Маркет. Для каждой делаю карточки по её требованиям к размерам и тексту.</p></details>
+    <details><summary>Работаете с Amazon и Etsy?</summary><p>Да. Белый фон, инфографика и A+ контент на английском.</p></details>
+  </div>
+</section>
+
+<!-- ФИНАЛ -->
+<section class="final">
+  <div class="wrap final-box">
+    <h2>Каждый день с плохой карточкой <em>вы теряете покупателей.</em></h2>
+    <p>Начните с разбора за 1 500 ₽. Если потом закажете исправление, эти деньги вычту из цены. Не понравится первый вариант дизайна, верну предоплату.</p>
+    <div class="cta" style="justify-content:center">
+      <a class="btn btn-y" href="#bot" data-pick="Разбор карточки">Разобрать мою карточку</a>
+      <a class="btn btn-o" href="#calc">Посчитать цену</a>
+    </div>
+    <div class="final-trust"><span>✓ Заявка ни к чему не обязывает</span><span>✓ Отвечаю в течение часа</span><span>✓ Чек на каждую оплату</span></div>
+  </div>
+</section>
+
+<a class="fab" href="#bot" id="fab">✨ <span>Оставить заявку<small>−30% первым 5 клиентам</small></span></a>
+
+<footer style="padding-bottom:110px"><div class="wrap foot">
+  <div class="foot-col"><b>ALSA Studio</b><span>Дизайн карточек для маркетплейсов</span><span>Telegram: @syuzli</span><span>E-mail: avetyansyuzi@mail.ru</span></div>
+  <div class="foot-col"><b>Документы</b><a href="offer.html">Публичная оферта</a><a href="offer.html#refund">Возврат и отказ от услуги</a><a href="offer.html#privacy">Персональные данные</a></div>
+  <div class="foot-col"><b>Реквизиты</b><span>ИП Аветян Сюзанна Размиковна</span><span>ИНН 236704707088 · ОГРНИП 326237500228955</span></div>
+</div></footer>
+
+<script>
+const TELEGRAM = "syuzli";
+const $ = id => document.getElementById(id);
+
+// ─── товары (демо) ───
+const works = [
+  {f:"style", e:"👟", i:"sneakers", t:"Кроссовки беговые", g:"linear-gradient(150deg,#FF2E7E,#FF8A3D)", b:"ХИТ", c:["🪶 Лёгкие, 220 г","💨 Дышащая сетка","🦶 Мягкая подошва"], r:"2 690 ₽", m:"Wildberries", p:"Пакет «Старт»"},
+  {f:"beauty", e:"🧴", i:"cream", t:"Крем для лица SPF 50", g:"linear-gradient(150deg,#FF7EB6,#B84DFF)", b:"−25%", c:["☀️ Защита от солнца","💧 Увлажняет 48 ч","🌿 Без парабенов"], r:"1 490 ₽", m:"Ozon", p:"Пакет «Продажи»"},
+  {f:"tech", e:"🎧", i:"headphones", t:"Беспроводные наушники", g:"linear-gradient(150deg,#3B1DFF,#00C2FF)", b:"NEW", c:["🔋 30 часов музыки","🔇 Шумоподавление","📶 Bluetooth 5.3"], r:"3 990 ₽", m:"Wildberries", p:"Rich-контент"},
+  {f:"home", e:"🕯️", i:"candle", t:"Ароматическая свеча", g:"linear-gradient(150deg,#FF9F1C,#E2442F)", b:"ПОДАРОК", c:["🌱 Соевый воск","⏳ Горит 40 часов","🍊 Аромат апельсина"], r:"1 590 ₽", m:"Etsy", p:"Пакет «Старт»"},
+  {f:"home", e:"🧸", i:"bear", t:"Мягкий мишка 40 см", g:"linear-gradient(150deg,#FFC93C,#16D19A)", b:"0+", c:["🧼 Можно стирать","🛡️ Безопасный","🤗 Очень мягкий"], r:"1 190 ₽", m:"Ozon", p:"Пакет «Старт»"},
+  {f:"style", e:"👜", i:"bag", t:"Сумка женская", g:"linear-gradient(150deg,#0F9D7A,#7B2FFF)", b:"ТРЕНД", c:["👜 Экокожа","📱 Влезает A4","🎁 Подарочная упаковка"], r:"4 490 ₽", m:"Amazon", p:"Фото + A+ контент"}
+];
+function card(w){
+  return `<div class="pc" style="--g:${w.g};--img:url(img/vitrina-${w.i}.jpg)"><div class="t">${w.t}</div><span class="badge">${w.b}</span>
+    <ul>${w.c.map(x=>`<li>${x}</li>`).join("")}</ul><div class="rate">${w.r}</div></div>`;
+}
+
+// hero
+$("stack").insertAdjacentHTML("afterbegin", [works[2],works[1],works[0]].map(card).join(""));
+// бегущая строка
+const mq = ["Wildberries","Ozon","Яндекс Маркет","Мегамаркет","Avito","AliExpress","Lamoda","Магнит Маркет","Amazon","Etsy"].map(x=>`<span>★ ${x}</span>`).join("");
+$("mq").innerHTML = mq + mq + mq + mq;
+
+// галерея
+function renderGallery(f){
+  $("gallery").innerHTML = works.filter(w => f==="all" || w.f===f).map(w =>
+    `<div class="work">${card(w)}<div class="cap"><b>${w.p}</b><span>${w.m}</span></div></div>`).join("");
+}
+$("filters").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  $("filters").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x===b));
+  renderGallery(b.dataset.f);
+});
+renderGallery("all");
+
+// до/после
+$("after").innerHTML = card(works[0]);
+const setCut = v => $("stage").style.setProperty("--cut", v + "%");
+$("cut").addEventListener("input", e => setCut(e.target.value));
+setCut(45);
+
+// лента поиска
+const dull = (price,name) => `<div class="ft"><div class="img"></div><div class="fprice">${price}</div><div class="name">${name}</div></div>`;
+$("feed").innerHTML = dull("2 490 ₽","Кроссовки мужские спорт") + dull("2 290 ₽","Кроссовки летние сетка") +
+  `<div class="ft win">${card(works[0])}<div class="fprice">2 690 ₽</div><div class="name">Кроссовки беговые лёгкие</div></div>` +
+  dull("2 350 ₽","Кроссовки для бега");
+
+// ─── бот ───
+const steps = [
+  {k:"Услуга", q:"Привет! 👋 Помогу оформить заявку.\nЧто вам нужно?", o:["Разбор «Экспресс»","Разбор «Стандарт»","Разбор «Глубокий»","Разбор магазина","Всё под ключ","Главное фото","Пакет «Старт»","Пакет «Продажи»","Логотип","Логотип + карточки","Пришлю товар на съёмку","Rich-контент","Не знаю, подскажите"]},
+  {k:"Площадка", q:"Где продаёте?", o:["Wildberries","Ozon","Яндекс Маркет","Мегамаркет","Avito","AliExpress","Lamoda","Магнит Маркет","Amazon / Etsy","Другое"]},
+  {k:"Товар", q:"Пришлите ссылку на товар или его артикул (например, WB 293336273)."},
+  {k:"Срок", q:"Когда нужно?", o:["Срочно, 1–2 дня","За неделю","Не спешу"]},
+  {k:"Контакт", q:"Как вас зовут и куда ответить? (Telegram или телефон)"}
+];
+const prices = {"Разбор карточки":"от 1 500 ₽. Подскажу, какой пакет разбора вам подходит. Если потом закажете исправление, эти деньги вычтем","Разбор «Экспресс»":"1 500 ₽, отчёт за 24 часа","Разбор «Стандарт»":"3 500 ₽, отчёт PDF за 48 часов","Разбор «Глубокий»":"7 500 ₽, отчёт и видеоразбор за 3 дня","Разбор магазина":"от 14 900 ₽, до 10 товаров, 5 дней","Всё под ключ":"от 9 900 ₽, точно скажу после разбора (разбор бесплатно)","Главное фото":"1 500 ₽","Пакет «Старт»":"3 150 ₽ со скидкой","Пакет «Продажи»":"7 900 ₽","Логотип":"3 500 ₽","Логотип + карточки":"7 200 ₽ (скидка 10%)","Пришлю товар на съёмку":"съёмка +1 000 ₽ к пакету (в «Продажи» бесплатно). Адрес для отправки пришлю в Telegram","Rich-контент":"от 5 000 ₽","Не знаю, подскажите":"бесплатно подскажу, что нужно именно вам"};
+let i = 0, ans = {}, started = false;
+function say(t, who){ const d = document.createElement("div"); d.className = "m " + who; d.textContent = t; $("msgs").appendChild(d); $("msgs").scrollTop = $("msgs").scrollHeight; }
+function ask(){
+  const s = steps[i]; $("opts").innerHTML = "";
+  setTimeout(() => {
+    say(s.q, "b");
+    if (s.o) { $("inp").hidden = true;
+      s.o.forEach(t => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.onclick = () => answer(t); $("opts").appendChild(b); });
+    } else { $("inp").hidden = false; if (started) $("txt").focus({preventScroll:true}); }
+  }, 380);
+}
+function answer(t){ started = true; say(t, "u"); ans[steps[i].k] = t; $("opts").innerHTML = ""; i++; i < steps.length ? ask() : finish(); }
+function finish(){
+  $("inp").hidden = true;
+  setTimeout(() => {
+    say("Спасибо! 🎉 Примерная цена: " + prices[ans["Услуга"]] + ".\n\nНажмите «Отправить заявку в Telegram»: откроется чат со мной, заявка уже будет написана, останется нажать «Отправить». Если текст не появился, нажмите «Скопировать заявку» и вставьте его в чат @" + TELEGRAM + ". Отвечу в течение часа!", "b");
+    $("tg").href = "https://t.me/" + TELEGRAM + "?text=" + encodeURIComponent(summary()); $("done").hidden = false;
+  }, 380);
+}
+const summary = () => "Здравствуйте! Заявка с сайта ALSA\n" +steps.map(s => s.k + ": " + ans[s.k]).join("\n");
+$("inp").addEventListener("submit", e => { e.preventDefault(); const v = $("txt").value.trim(); if (!v) return; $("txt").value = ""; answer(v); });
+$("copy").addEventListener("click", () => {
+  const t = summary(), ok = () => { $("copy").textContent = "✅ Скопировано"; setTimeout(() => $("copy").textContent = "📋 Скопировать заявку", 2000); };
+  try { navigator.clipboard.writeText(t).then(ok, () => say(t, "b")); } catch { say(t, "b"); }
+});
+$("again").addEventListener("click", () => { i = 0; ans = {}; $("msgs").innerHTML = ""; $("done").hidden = true; ask(); });
+// кнопки «Выбрать» в ценах сразу отвечают боту
+document.querySelectorAll("[data-pick]").forEach(a => a.addEventListener("click", () => { if (i === 0) setTimeout(() => answer(a.dataset.pick), 450); }));
+ask();
+// ─── калькулятор ───
+const CALC = {audit:["Разбор «Экспресс»",1500],std:["Разбор «Стандарт»",3500],deep:["Разбор «Глубокий»",7500],shop:["Разбор магазина (до 10 товаров)",14900],main:["Главное фото",1500],start:["Пакет «Старт»",3150],sales:["Пакет «Продажи»",7900],key:["Всё под ключ",9900]};
+const rub = n => Math.round(n).toLocaleString("ru-RU").replace(/,/g," ");
+function calc(){
+  const k = document.querySelector('input[name="svc"]:checked').value, q = +$("cQty").value;
+  const [name, unit] = CALC[k], qq = k === "shop" ? 1 : q; let lines = [[k === "shop" ? name : name + " × " + q, unit*qq]], sum = unit*qq;
+  if ($("cShoot").checked && !["sales","audit","std","deep","shop"].includes(k)) { lines.push(["Съёмка × " + q, 1000*q]); sum += 1000*q; }
+  if ($("cShoot").checked && k === "sales") lines.push(["Съёмка (в «Продажи» бесплатно)", 0]);
+  if ($("cLogo").checked) { lines.push(["Логотип", 3500]); sum += 3500; }
+  if ($("cFast").checked) { const f = sum*0.3; lines.push(["Срочность +30%", f]); sum += f; }
+  const pct = Math.max(q >= 3 && k !== "shop" ? 15 : 0, $("cLogo").checked ? 10 : 0);
+  const disc = sum*pct/100; if (pct) { lines.push(["Скидка " + pct + "%", -disc]); sum -= disc; }
+  $("cQty").disabled = k === "shop"; $("cQtyOut").textContent = k === "shop" ? "до 10" : q; $("cTotal").textContent = rub(sum);
+  $("cSave").hidden = !pct; $("cSave").textContent = "Экономия " + rub(disc) + " ₽";
+  $("cLines").innerHTML = lines.map(([a,b]) => `<li><span>${a}</span><b>${b<0?"−":""}${rub(Math.abs(b))} ₽</b></li>`).join("");
+  const msg = "Здравствуйте! Расчёт с сайта ALSA\n" + lines.map(([a,b]) => a + ": " + (b<0?"−":"") + rub(Math.abs(b)) + " ₽").join("\n") + "\nИтого: " + rub(sum) + " ₽";
+  $("cSend").href = "https://t.me/" + TELEGRAM + "?text=" + encodeURIComponent(msg);
+}
+document.querySelectorAll('#calc input').forEach(el => el.addEventListener("input", calc));
+calc();
+$("leadBtn").href = "https://t.me/" + TELEGRAM + "?text=" + encodeURIComponent("ЧЕКЛИСТ");
+
+// плавающая кнопка прячется, когда бот уже на экране
+try { new IntersectionObserver(([e]) => { $("fab").hidden = e.isIntersecting; }).observe($("bot")); } catch {}
+</script>
+<script src="i18n.js"></script>
+
+</body></html>
