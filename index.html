@@ -1009,13 +1009,12 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 
 <script>
 const TELEGRAM = "syuzli";
-const RELAY = "https://formsubmit.co/ajax/avetyansyuzi@mail.ru"; // заявки автоматически приходят на почту
+// Google Apps Script «ALSA бот заявок»: заявки приходят на почту и в Telegram-бот @AlsaZayavkiBot
+const RELAY = "https://script.google.com/macros/s/AKfycbwR30rF4ZflO4JmYhMIuD3ja7a5NVJo7p07OL3mCX2qRIWqlVrNikPxru8WmtuDrV3UaQ/exec";
 let lastNotify = 0;
 function notify(text){
   if (!RELAY || Date.now() - lastNotify < 10000) return; lastNotify = Date.now();
-  const subject = text.startsWith("Новая заявка") ? "🔔 ALSA: новая заявка" : "🔔 ALSA: клиент считает цену";
-  try { fetch(RELAY, {method:"POST", headers:{"Content-Type":"application/json", "Accept":"application/json"},
-    body: JSON.stringify({_subject: subject, _template: "box", _captcha: "false", "Заявка": text, "Страница": location.href})}).catch(()=>{}); } catch {}
+  try { fetch(RELAY, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain"}, body: JSON.stringify({text: text + "\nСтраница: " + location.href})}).catch(()=>{}); } catch {}
 }
 const $ = id => document.getElementById(id);
 
