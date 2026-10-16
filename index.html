@@ -1009,6 +1009,14 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 
 <script>
 const TELEGRAM = "syuzli";
+const RELAY = "https://formsubmit.co/ajax/avetyansyuzi@mail.ru"; // заявки автоматически приходят на почту
+let lastNotify = 0;
+function notify(text){
+  if (!RELAY || Date.now() - lastNotify < 10000) return; lastNotify = Date.now();
+  const subject = text.startsWith("Новая заявка") ? "🔔 ALSA: новая заявка" : "🔔 ALSA: клиент считает цену";
+  try { fetch(RELAY, {method:"POST", headers:{"Content-Type":"application/json", "Accept":"application/json"},
+    body: JSON.stringify({_subject: subject, _template: "box", _captcha: "false", "Заявка": text, "Страница": location.href})}).catch(()=>{}); } catch {}
+}
 const $ = id => document.getElementById(id);
 
 // ─── товары (демо) ───
@@ -1081,6 +1089,7 @@ function finish(){
   setTimeout(() => {
     say("Спасибо! 🎉 Примерная цена: " + prices[ans["Услуга"]] + ".\n\nНажмите «Отправить заявку в Telegram»: откроется чат со мной, заявка уже будет написана, останется нажать «Отправить». Если текст не появился, нажмите «Скопировать заявку» и вставьте его в чат @" + TELEGRAM + ". Отвечу в течение часа!", "b");
     $("tg").href = "https://t.me/" + TELEGRAM + "?text=" + encodeURIComponent(summary()); $("done").hidden = false;
+    notify("Новая заявка с сайта\n" + steps.map(s => s.k + ": " + ans[s.k]).join("\n"));
   }, 380);
 }
 const summary = () => "Здравствуйте! Заявка с сайта ALSA\n" +steps.map(s => s.k + ": " + ans[s.k]).join("\n");
@@ -1109,8 +1118,10 @@ function calc(){
   $("cSave").hidden = !pct; $("cSave").textContent = "Экономия " + rub(disc) + " ₽";
   $("cLines").innerHTML = lines.map(([a,b]) => `<li><span>${a}</span><b>${b<0?"−":""}${rub(Math.abs(b))} ₽</b></li>`).join("");
   const msg = "Здравствуйте! Расчёт с сайта ALSA\n" + lines.map(([a,b]) => a + ": " + (b<0?"−":"") + rub(Math.abs(b)) + " ₽").join("\n") + "\nИтого: " + rub(sum) + " ₽";
-  $("cSend").href = "https://t.me/" + TELEGRAM + "?text=" + encodeURIComponent(msg);
+  $("cSend").href = "https://t.me/" + TELEGRAM + "?text=" + encodeURIComponent(msg); lastCalc = msg;
 }
+let lastCalc = "";
+$("cSend").addEventListener("click", () => notify("Клиент открыл расчёт в Telegram\n" + lastCalc));
 document.querySelectorAll('#calc input').forEach(el => el.addEventListener("input", calc));
 calc();
 $("leadBtn").href = "https://t.me/" + TELEGRAM + "?text=" + encodeURIComponent("ЧЕКЛИСТ");
