@@ -449,7 +449,8 @@ window.ALSA_T = [
 ["Персональные данные","Personal data","个人数据","Անձնական տվյալներ","Жеке деректер"],
 ["Реквизиты","Business details","企业信息","Ռեկվիզիտներ","Деректемелер"],
 ["до 10","up to 10","最多10","մինչև 10","10-ға дейін"],
-["от 14 900 ₽, до 10 товаров, 5 дней","from 14,900 ₽, up to 10 products, 5 days","14 900 ₽ 起，最多10件商品，5天","14 900 ₽-ից, մինչև 10 ապրանք, 5 օր","14 900 ₽-ден, 10 тауарға дейін, 5 күн"]
+["от 14 900 ₽, до 10 товаров, 5 дней","from 14,900 ₽, up to 10 products, 5 days","14 900 ₽ 起，最多10件商品，5天","14 900 ₽-ից, մինչև 10 ապրանք, 5 օր","14 900 ₽-ден, 10 тауарға дейін, 5 күн"],
+["Оплата принимается в рублях. В других валютах цены указаны ориентировочно, по текущему курсу.","Payment is accepted in rubles. Prices in other currencies are approximate, at the current exchange rate.","以卢布收款。其他货币的价格为按当前汇率折算的参考价。","Վճարումը ընդունվում է ռուբլով։ Այլ արժույթներով գները մոտավոր են՝ ըստ ընթացիկ փոխարժեքի։","Төлем рубльмен қабылданады. Басқа валютадағы бағалар ағымдағы бағам бойынша шамамен көрсетілген."]
 ];
 
 (function(){
@@ -466,11 +467,34 @@ window.ALSA_T = [
     if (m.has(t)) return s.replace(t, m.get(t));
     return s.replace(re, k => m.get(k) ?? k);
   }
+  // Валюты: в исходнике цены в ₽, в других языках пересчитываются по текущему курсу
+  const CUR = {
+    en:{code:"USD", sym:"$", pre:true,  loc:"en-US", step:v => v < 100 ? 1 : 5},
+    zh:{code:"CNY", sym:"¥", pre:true,  loc:"en-US", step:v => v < 200 ? 5 : 10},
+    hy:{code:"AMD", sym:"֏", pre:false, loc:"ru-RU", step:v => 500},
+    kk:{code:"KZT", sym:"₸", pre:false, loc:"ru-RU", step:v => 500}
+  };
+  const rates = {USD:84, CNY:12.5, AMD:0.2315, KZT:0.1855};   // ₽ за 1 единицу (курс на 17.10.2026; запасной, если живой недоступен)
+  try { const c = JSON.parse(localStorage.getItem("alsa-rates")); if (c && c.r) Object.assign(rates, c.r); } catch {}
+  const PRICE = /(\d{1,3}(?:[   ,]\d{3})+|\d+)(\s*)₽/g;
+  const toNum = s => parseInt(s.replace(/\D/g, ""), 10);
+  function fmtNum(rub, c){
+    const v = rub / rates[c.code], st = c.step(v);
+    return Math.max(st, Math.round(v / st) * st).toLocaleString(c.loc);
+  }
+  function cur(s, n){
+    const c = CUR[lang]; if (!c || !s) return s;
+    const p = n && n.parentNode;
+    if (/^\s*₽\s*$/.test(s)) return c.pre ? "" : s.replace("₽", c.sym);   // «₽» отдельным узлом (итог калькулятора)
+    if (p && (p.id === "cTotal" || p.nodeName === "S") && /^\s*\d[\d   ,]*\s*$/.test(s)) {   // число без знака: итог, старая цена
+      const t = fmtNum(toNum(s), c); return c.pre ? c.sym + t : t; }
+    return s.replace(PRICE, (m, num) => { const t = fmtNum(toNum(num), c); return c.pre ? c.sym + t : t + " " + c.sym; });
+  }
   const SKIP = {SCRIPT:1, STYLE:1, TEXTAREA:1};
   let busy = false;
   function doText(n){
     if (n.__ru === undefined || n.data !== n.__out) n.__ru = n.data;  // новый исходный текст
-    const out = tr(n.__ru); n.__out = out; if (out !== n.data) n.data = out;
+    const out = cur(tr(n.__ru), n); n.__out = out; if (out !== n.data) n.data = out;
   }
   function walk(root){
     if (root.nodeType === 3) { if (!SKIP[root.parentNode?.nodeName]) doText(root); return; }
@@ -492,6 +516,7 @@ window.ALSA_T = [
   function setLang(l){
     busy = true; resetAll(); lang = l; walk(document.body); busy = false;
     document.documentElement.lang = l === "zh" ? "zh-CN" : l;
+    document.documentElement.dataset.lang = l;
     document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === l));
     try { localStorage.setItem("alsa-lang", l); } catch {}
   }
@@ -499,6 +524,12 @@ window.ALSA_T = [
     ms.forEach(m => { if (m.type === "characterData") doText(m.target); else m.addedNodes.forEach(walk); });
     busy = false; }).observe(document.body, {subtree:true, childList:true, characterData:true});
   document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click", () => setLang(b.dataset.l)));
+  // Свежий курс (если внешние запросы разрешены), иначе остаются запасные значения
+  try { fetch("https://api.exchangerate-api.com/v4/latest/RUB").then(r => r.json()).then(j => {
+    ["USD","CNY","AMD","KZT"].forEach(k => { const v = j.rates[k]; if (v > 0) rates[k] = 1 / v; });
+    try { localStorage.setItem("alsa-rates", JSON.stringify({r: rates})); } catch {}
+    if (lang !== "ru") setLang(lang);
+  }).catch(() => {}); } catch {}
   let saved = null; try { saved = localStorage.getItem("alsa-lang"); } catch {}
   const nav = (navigator.language || "ru").slice(0,2).toLowerCase();
   const start = saved || (["zh","hy","kk"].includes(nav) ? nav : "ru");
