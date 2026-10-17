@@ -1,15 +1,15 @@
-// ─── Онлайн-помощник «Алса»: сам здоровается и отвечает клиентам ───
+// ─── Онлайн-помощник «Ника»: сам здоровается и отвечает клиентам ───
 // Ответы пишет Gemini через Apps Script «ALSA бот заявок» (action: "chat"), вся переписка дублируется в Telegram-бот.
 // Если сервер не ответил, помощник отвечает по шаблонам ниже.
 (() => {
   const RELAY = "https://script.google.com/macros/s/AKfycbwR30rF4ZflO4JmYhMIuD3ja7a5NVJo7p07OL3mCX2qRIWqlVrNikPxru8WmtuDrV3UaQ/exec";
   const lang = () => (document.documentElement.lang || "ru").slice(0, 2);
   const T = {
-    ru: {hi: "Здравствуйте! 👋 Я Алса, помощник ALSA Studio. Помочь с карточкой товара? Спросите про цены, сроки или пришлите ссылку на товар.", name: "Алса · помощник ALSA", on: "онлайн, отвечаю сразу", ph: "Напишите вопрос…", chips: ["Сколько стоит?", "Хочу разбор карточки", "Сроки?"]},
-    en: {hi: "Hi! 👋 I'm Alsa, the ALSA Studio assistant. Need help with a product card? Ask about prices, timing or send a link to your product.", name: "Alsa · ALSA assistant", on: "online, replies instantly", ph: "Type your question…", chips: ["How much?", "I want a card audit", "How long?"]},
-    hy: {hi: "Բարև՛ 👋 Ես Ալսան եմ՝ ALSA Studio-ի օգնականը։ Օգնե՞մ ապրանքի քարտի հարցում։ Հարցրեք գների, ժամկետների մասին կամ ուղարկեք ապրանքի հղումը։", name: "Ալսա · ALSA օգնական", on: "առցանց է, պատասխանում է միանգամից", ph: "Գրեք հարցը…", chips: ["Ի՞նչ արժե", "Քարտի վերլուծություն", "Ժամկետներ"]},
-    zh: {hi: "您好！👋 我是 ALSA Studio 的助手 Alsa。需要帮您做商品卡片吗？可以问价格、时间，或发送商品链接。", name: "Alsa · ALSA 助手", on: "在线，即时回复", ph: "请输入问题…", chips: ["多少钱？", "我要卡片诊断", "需要多久？"]},
-    kk: {hi: "Сәлеметсіз бе! 👋 Мен Алса, ALSA Studio көмекшісімін. Тауар карточкасына көмектесейін бе? Баға, мерзім туралы сұраңыз немесе тауар сілтемесін жіберіңіз.", name: "Алса · ALSA көмекшісі", on: "онлайн, бірден жауап береді", ph: "Сұрағыңызды жазыңыз…", chips: ["Бағасы қанша?", "Карточка талдауы", "Мерзімі?"]}
+    ru: {hi: "Здравствуйте! 👋 Я Ника, помощник ALSA Studio. Помочь с карточкой товара? Спросите про цены, сроки или пришлите ссылку на товар.", name: "Ника · помощник ALSA", on: "онлайн, отвечаю сразу", ph: "Напишите вопрос…", chips: ["Сколько стоит?", "Хочу разбор карточки", "Сроки?"]},
+    en: {hi: "Hi! 👋 I'm Nika, the ALSA Studio assistant. Need help with a product card? Ask about prices, timing or send a link to your product.", name: "Nika · ALSA assistant", on: "online, replies instantly", ph: "Type your question…", chips: ["How much?", "I want a card audit", "How long?"]},
+    hy: {hi: "Բարև՛ 👋 Ես Նիկան եմ՝ ALSA Studio-ի օգնականը։ Օգնե՞մ ապրանքի քարտի հարցում։ Հարցրեք գների, ժամկետների մասին կամ ուղարկեք ապրանքի հղումը։", name: "Նիկա · ALSA օգնական", on: "առցանց է, պատասխանում է միանգամից", ph: "Գրեք հարցը…", chips: ["Ի՞նչ արժե", "Քարտի վերլուծություն", "Ժամկետներ"]},
+    zh: {hi: "您好！👋 我是 ALSA Studio 的助手 Nika。需要帮您做商品卡片吗？可以问价格、时间，或发送商品链接。", name: "Nika · ALSA 助手", on: "在线，即时回复", ph: "请输入问题…", chips: ["多少钱？", "我要卡片诊断", "需要多久？"]},
+    kk: {hi: "Сәлеметсіз бе! 👋 Мен Ника, ALSA Studio көмекшісімін. Тауар карточкасына көмектесейін бе? Баға, мерзім туралы сұраңыз немесе тауар сілтемесін жіберіңіз.", name: "Ника · ALSA көмекшісі", on: "онлайн, бірден жауап береді", ph: "Сұрағыңызды жазыңыз…", chips: ["Бағасы қанша?", "Карточка талдауы", "Мерзімі?"]}
   };
   const t = () => T[lang()] || T.ru;
 
